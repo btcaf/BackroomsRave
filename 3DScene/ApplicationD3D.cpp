@@ -20,6 +20,8 @@
 #include <dxgi1_6.h>
 #include <DirectXMath.h>
 #include "ApplicationD3D.h"
+#include "Camera.h"
+#include "util.h"
 
 #ifndef NDEBUG
 // Activates D3D12 debug layer in the InitDirect3D function
@@ -43,6 +45,7 @@ namespace {
     using DirectX::XMMatrixIdentity;
     using DirectX::XMMATRIX;
     using DirectX::XMMatrixRotationZ;
+    using DirectX::XMMatrixRotationY;
     using DirectX::XMMatrixMultiply;
     using DirectX::XMMatrixTranslation;
     using DirectX::XMMatrixPerspectiveFovLH;
@@ -56,8 +59,8 @@ namespace {
     constexpr UINT INTERVAL = 15;
 
     // Animation time change settings
-    constexpr FLOAT TIME_STEP = 1.0f / 128.0f;
-    FLOAT angle = 0.0f;
+    //constexpr FLOAT TIME_STEP = 1.0f / 128.0f;
+    //FLOAT angle = 0.0f;
 
     // Components used to run the Direct3D 12
     constexpr UINT FB_COUNT = 2;    // the number of frame buffers
@@ -95,6 +98,10 @@ namespace {
         },
     };
 
+    // Depth buffer
+    ComPtr<ID3D12DescriptorHeap> dsv_heap = nullptr;
+    ComPtr<ID3D12Resource> depth_buffer = nullptr;
+
     // Graphic pipeline state object
     ComPtr<ID3D12PipelineState> pipeline_state = nullptr;
 
@@ -122,6 +129,9 @@ namespace {
     HANDLE fence_event;
     UINT64 fence_values[FB_COUNT] = { 0, 0 };
 
+    // Camera
+    Camera camera;
+
     // Geometric data
     struct vertex_t {
         FLOAT position[3];
@@ -131,21 +141,31 @@ namespace {
     constinit size_t const VERTEX_SIZE = sizeof(vertex_t) / sizeof(FLOAT);
     vertex_t triangle_data[] = {
         // Position (x, y, z)       Color RGBA                   Texture coordinates
-        { {-1.0f, -1.0f, -1.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 1.0f} },
-        { {-1.0f,  1.0f, -1.0f},    {1.0f, 1.0f, 0.0f, 1.0f},    {0.0f, 0.0f} },
-        { { 1.0f, -1.0f, -1.0f},    {0.25f, 0.25f, 0.25f, 1.0f}, {1.0f, 1.0f} }
+        // wall
+        { {-1.0f, -1.0f, 3.0f},    {0.25f, 0.25f, 0.25f, 1.0f},    {0.0f, 1.0f} },
+        { {-1.0f,  1.0f, 3.0f},    {0.25f, 0.25f, 0.25f, 1.0f},    {0.0f, 0.0f} },
+        { { 1.0f, -1.0f, 3.0f},    {0.25f, 0.25f, 0.25f, 1.0f},    {1.0f, 1.0f} },
+		{ { 1.0f, -1.0f, 3.0f},    {0.25f, 0.25f, 0.25f, 1.0f},    {1.0f, 1.0f} },
+		{ {-1.0f,  1.0f, 3.0f},    {0.25f, 0.25f, 0.25f, 1.0f},    {0.0f, 0.0f} },
+		{ { 1.0f,  1.0f, 3.0f},    {0.25f, 0.25f, 0.25f, 1.0f},    {1.0f, 0.0f} },
+        // floor
+        /*{{-1.0f, -1.0f, 5.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 1.0f}},
+		{ { 1.0f, -1.0f, 5.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 1.0f} },
+		{ {-1.0f, -1.0f, 1.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 0.0f} },
+        { {-1.0f, -1.0f, 1.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 0.0f} },
+        { { 1.0f, -1.0f, 5.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 1.0f} },
+        { { 1.0f, -1.0f, 1.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 0.0f} },*/
+        // floor but 10 times bigger
+        { {-10.0f, -1.0f,  10.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 1.0f} },
+        { { 10.0f, -1.0f,  10.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 1.0f} },
+        { {-10.0f, -1.0f, -10.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 0.0f} },
+		{ {-10.0f, -1.0f, -10.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 0.0f} },
+		{ { 10.0f, -1.0f,  10.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 1.0f} },
+		{ { 10.0f, -1.0f, -10.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 0.0f} }
     };
     constinit size_t const VERTEX_BUFFER_SIZE = sizeof triangle_data;
     constinit size_t const NUM_VERTICES = VERTEX_BUFFER_SIZE / sizeof(vertex_t);
 
-    // Texture surface data (RGBA colors of texels)
-    UINT const bmp_px_size = 4;  // bytes per texel
-    UINT const bmp_width = 2;
-    UINT const bmp_height = 2;
-    array<BYTE, bmp_px_size* bmp_width* bmp_height> bmp_bits = {
-        255, 255, 255, 32,    255, 0, 0, 255,
-        255, 0, 0, 128,       255, 255, 255, 255
-    };
 
     // Texture resource
     ComPtr<ID3D12Resource> texture_resource = nullptr;
@@ -231,6 +251,70 @@ namespace {
     }
 
     /*
+     * Initializes depth buffer for depth test
+     */
+    void InitDepthBuffer() {
+        // Depth stencil descriptor heap settings
+        D3D12_DESCRIPTOR_HEAP_DESC const dsv_heap_desc = {
+            .Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV,
+            .NumDescriptors = 1,
+            .Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
+            .NodeMask = 0
+        };
+
+        // Create depth stencil view descriptor heap.
+        d3d12_device->CreateDescriptorHeap(
+            &dsv_heap_desc, IID_PPV_ARGS(&dsv_heap));
+
+        // Create depth buffer resource
+        D3D12_HEAP_PROPERTIES dsv_heap_prop = {
+            .Type = D3D12_HEAP_TYPE_DEFAULT,
+            .CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
+            .MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN,
+            .CreationNodeMask = 1,
+            .VisibleNodeMask = 1
+        };
+        D3D12_RESOURCE_DESC dsv_resource_desc = {
+           .Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+           .Alignment = 0,
+           .Width = static_cast<UINT64>(viewport.Width),
+           .Height = static_cast<UINT>(viewport.Height),
+           .DepthOrArraySize = 1,
+           .MipLevels = 0,
+           .Format = DXGI_FORMAT_D32_FLOAT,
+           .SampleDesc = {.Count = 1, .Quality = 0 },
+           .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+           .Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
+        };
+        D3D12_CLEAR_VALUE depth_clear_value = {
+            .Format = DXGI_FORMAT_D32_FLOAT,
+            .DepthStencil = {.Depth = 1.0f, .Stencil = 0 }
+        };
+        d3d12_device->CreateCommittedResource(
+            &dsv_heap_prop,
+            D3D12_HEAP_FLAG_NONE,
+            &dsv_resource_desc,
+            D3D12_RESOURCE_STATE_DEPTH_WRITE,
+            &depth_clear_value,
+            IID_PPV_ARGS(&depth_buffer)
+        );
+
+        // Create depth buffer view
+        D3D12_DEPTH_STENCIL_VIEW_DESC const depth_buffer_view = {
+            .Format = DXGI_FORMAT_D32_FLOAT,
+            .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
+            .Flags = D3D12_DSV_FLAG_NONE,
+            .Texture2D = {}
+        };
+        d3d12_device->CreateDepthStencilView(
+            depth_buffer.Get(),
+            &depth_buffer_view,
+            dsv_heap->GetCPUDescriptorHandleForHeapStart()
+        );
+    }
+
+
+    /*
      * Creates a pipeline state object (PSO) for the application.
      */
     void InitPipelineState() {
@@ -268,6 +352,29 @@ namespace {
             .ForcedSampleCount = 0,
             .ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
         };
+
+        // Depth and stencil tests state settings
+        D3D12_DEPTH_STENCIL_DESC depth_desc = {
+            .DepthEnable = TRUE,
+            .DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL,
+            .DepthFunc = D3D12_COMPARISON_FUNC_LESS,
+            .StencilEnable = FALSE,
+            .StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK,
+            .StencilWriteMask = D3D12_DEFAULT_STENCIL_READ_MASK,
+            .FrontFace = {
+                .StencilFailOp = D3D12_STENCIL_OP_KEEP,
+                .StencilDepthFailOp = D3D12_STENCIL_OP_KEEP,
+                .StencilPassOp = D3D12_STENCIL_OP_KEEP,
+                .StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS
+             },
+            .BackFace = {
+                .StencilFailOp = D3D12_STENCIL_OP_KEEP,
+                .StencilDepthFailOp = D3D12_STENCIL_OP_KEEP,
+                .StencilPassOp = D3D12_STENCIL_OP_KEEP,
+                .StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS
+             }
+        };
+
 
         // Vertex input layout settings
         D3D12_INPUT_ELEMENT_DESC input_elements_desc[] = {
@@ -312,14 +419,14 @@ namespace {
             .BlendState = blend_desc,
             .SampleMask = UINT_MAX,
             .RasterizerState = rasterizer_desc,
-            .DepthStencilState = {},
+            .DepthStencilState = depth_desc,
             .InputLayout
                 = { input_elements_desc, _countof(input_elements_desc)},
             .IBStripCutValue = D3D12_INDEX_BUFFER_STRIP_CUT_VALUE_DISABLED,
             .PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
             .NumRenderTargets = 1,
             .RTVFormats = { DXGI_FORMAT_R8G8B8A8_UNORM },
-            .DSVFormat = DXGI_FORMAT_UNKNOWN,
+            .DSVFormat = DXGI_FORMAT_D32_FLOAT,
             .SampleDesc = {.Count = 1, .Quality = 0 },
             .NodeMask = 0,
             .CachedPSO = {},
@@ -489,6 +596,12 @@ namespace {
      * InitFence AND InitPipelineStates.
      */
     void BuildTextureResource() {
+        hr_check(CoInitializeEx(nullptr, COINIT_MULTITHREADED));
+        UINT const bmp_px_size = 4;
+        UINT bmp_width = 0;
+        UINT bmp_height = 0;
+        BYTE* bmp_bits = LoadBitmapFromFile(TEXT("assets/saul.png"), bmp_width, bmp_height);
+
         // Texture resource
         D3D12_HEAP_PROPERTIES tex_heap_prop = {
             .Type = D3D12_HEAP_TYPE_DEFAULT,
@@ -553,7 +666,7 @@ namespace {
 
         // Copy texture surface data to the helper buffer
         D3D12_SUBRESOURCE_DATA texture_data = {
-            .pData = bmp_bits.data(),
+            .pData = bmp_bits,
             .RowPitch = bmp_width * bmp_px_size,
             .SlicePitch = bmp_width * bmp_height * bmp_px_size
         };
@@ -679,6 +792,7 @@ namespace {
      */
     void InitGraphicsResources() {
         InitRootSignature();
+        InitDepthBuffer();
         InitPipelineState();
         InitCommandList();
         BuildVertexBuffer();
@@ -732,11 +846,20 @@ namespace {
             = D3D12_RESOURCE_STATE_RENDER_TARGET;
         cmd_list->ResourceBarrier(1, &resource_barrier);
 
-        cmd_list->OMSetRenderTargets(1, &cpu_desc_handle, FALSE, nullptr);
+        D3D12_CPU_DESCRIPTOR_HANDLE cpu_depth_desc_handle
+            = dsv_heap->GetCPUDescriptorHandleForHeapStart();
+
+        cmd_list->OMSetRenderTargets(1, &cpu_desc_handle, FALSE, &cpu_depth_desc_handle);
 
         cmd_list->ClearRenderTargetView(
             cpu_desc_handle, clear_color, 0, nullptr
         );
+        cmd_list->ClearDepthStencilView(
+            cpu_depth_desc_handle,
+            D3D12_CLEAR_FLAG_DEPTH,
+            1.0, 0, 0, nullptr
+        );
+
         cmd_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         cmd_list->IASetVertexBuffers(0, 1, &vertex_buffer_view);
         cmd_list->DrawInstanced(NUM_VERTICES, 1, 0, 0);
@@ -768,6 +891,7 @@ namespace {
         PrepareNextFrame();
     }
 };
+
 
 void InitDirect3D(HWND hwnd) {
     UINT dxgi_factory_flag = 0;
@@ -868,22 +992,25 @@ void InitTimer(HWND hwnd) {
 
 void OnTimer() {
     // Change animation time.
-    angle += TIME_STEP;
+    camera.update();
+    
 
     // Compute transformation matrices.
     XMMATRIX wvp_matrix;
-    static XMMATRIX vp_matrix = XMMatrixMultiply(
-        XMMatrixTranslation(0.0f, 0.0f, 4.0f),                    // View
+
+    XMMATRIX vp_matrix = XMMatrixMultiply(
+        camera.get_view_matrix(),                                 // View
         XMMatrixPerspectiveFovLH(                                 // Projection
-            45.0f, viewport.Width / viewport.Height, 1.0f, 100.0f)
+            45.0f, viewport.Width / viewport.Height, 0.5f, 50.0f)
     );
     wvp_matrix = XMMatrixMultiply(
-        XMMatrixRotationZ(2.5f * angle),                          // World
+        XMMatrixIdentity(),                                       // World
         vp_matrix
     );
     wvp_matrix = XMMatrixTranspose(wvp_matrix);
 
     // Update the constant buffer of vertex shader.
+    XMStoreFloat4x4(&vs_const_buffer_cpu_data.matWorldViewProj, wvp_matrix);
     XMStoreFloat4x4(&vs_const_buffer_cpu_data.matWorldViewProj, wvp_matrix);
     memcpy(vs_const_buffer_data, &vs_const_buffer_cpu_data,
         sizeof(vs_const_buffer_cpu_data));

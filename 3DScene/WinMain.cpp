@@ -109,6 +109,8 @@ int WINAPI wWinMain(
 
     ShowWindow(hwnd, cmd_show);
     UpdateWindow(hwnd);
+    // hide cursor
+    while (ShowCursor(FALSE) >= 0);
 
     return message_loop();
 }
