@@ -9,18 +9,20 @@
 
 class AxisRectangle {
 	public:
-	AxisRectangle(
-		DirectX::XMFLOAT3 pos_lower_left, 
-		DirectX::XMFLOAT3 pos_upper_right, 
-		DirectX::XMFLOAT2 tex_lower_left, 
-		DirectX::XMFLOAT2 tex_upper_right,
-		DirectX::XMFLOAT3 normal
-	);
+		AxisRectangle(
+			DirectX::XMFLOAT3 pos_lower_left,
+			DirectX::XMFLOAT3 pos_upper_right,
+			DirectX::XMFLOAT2 tex_lower_left,
+			DirectX::XMFLOAT2 tex_upper_right,
+			bool change_orientation,
+			FLOAT tile_size,
+			DirectX::XMFLOAT4 color = { 0.0f, 0.0f, 0.0f, 0.0f } // use lighting
+		);
 
-	std::vector<vertex_t> get_vertices();
+	std::vector<square_instance_t> get_instances();
 
 	private:
-		std::vector<vertex_t> vertices;
+		std::vector<square_instance_t> instances;
 };
 
 #endif // RECTANGLE_H

@@ -5,84 +5,122 @@ AxisRectangle::AxisRectangle(
 	DirectX::XMFLOAT3 pos_upper_right,
 	DirectX::XMFLOAT2 tex_lower_left,
 	DirectX::XMFLOAT2 tex_upper_right,
-	DirectX::XMFLOAT3 normal
+	bool change_orientation,
+	FLOAT tile_size,
+	DirectX::XMFLOAT4 color
 ) {
-	vertex_t v1 = {
-		{ pos_lower_left.x, pos_lower_left.y, pos_lower_left.z },
-		{ 1.0f, 1.0f, 1.0f, 1.0f },
-		{ tex_lower_left.x, tex_lower_left.y },
-		{ normal.x, normal.y, normal.z }
-	};
-
-	vertex_t v2;
-	vertex_t v3;
-	if (normal.x != 0.0f) {
-		v2 = {
-			{ pos_lower_left.x, pos_lower_left.y, pos_upper_right.z },
-			{ 1.0f, 1.0f, 1.0f, 1.0f },
-			{ tex_lower_left.x, tex_upper_right.y },
-			{ normal.x, normal.y, normal.z }
-		};
-		v3 = {
-			{ pos_lower_left.x, pos_upper_right.y, pos_lower_left.z },
-			{ 1.0f, 1.0f, 1.0f, 1.0f },
-			{ tex_upper_right.x, tex_lower_left.y },
-			{ normal.x, normal.y, normal.z }
-		};
-		if (normal.x > 0.0f) {
-			std::swap(v2, v3);
-		}
+	int axis = 0;
+	DirectX::XMFLOAT2 planar_lower_left;
+	DirectX::XMFLOAT2 planar_upper_right;
+	if (pos_lower_left.x == pos_upper_right.x) {
+		planar_lower_left = { pos_lower_left.y, pos_lower_left.z };
+		planar_upper_right = { pos_upper_right.y, pos_upper_right.z };
+		axis = 0;
 	}
-	else if (normal.y != 0.0f) {
-		v2 = {
-			{ pos_upper_right.x, pos_lower_left.y, pos_lower_left.z },
-			{ 1.0f, 1.0f, 1.0f, 1.0f },
-			{ tex_lower_left.x, tex_upper_right.y },
-			{ normal.x, normal.y, normal.z }
-		};
-		v3 = {
-			{ pos_lower_left.x, pos_lower_left.y, pos_upper_right.z },
-			{ 1.0f, 1.0f, 1.0f, 1.0f },
-			{ tex_upper_right.x, tex_lower_left.y },
-			{ normal.x, normal.y, normal.z }
-		};
-		if (normal.y > 0.0f) {
-			std::swap(v2, v3);
-		}
+	else if (pos_lower_left.y == pos_upper_right.y) {
+		planar_lower_left = { pos_lower_left.x, pos_lower_left.z };
+		planar_upper_right = { pos_upper_right.x, pos_upper_right.z };
+		axis = 1;
+	}
+	else if (pos_lower_left.z == pos_upper_right.z) {
+		planar_lower_left = { pos_lower_left.x, pos_lower_left.y };
+		planar_upper_right = { pos_upper_right.x, pos_upper_right.y };
+		axis = 2;
 	}
 	else {
-		v2 = {
-			{ pos_lower_left.x, pos_upper_right.y, pos_lower_left.z },
-			{ 1.0f, 1.0f, 1.0f, 1.0f },
-			{ tex_lower_left.x, tex_upper_right.y },
-			{ normal.x, normal.y, normal.z }
-		};
-		v3 = {
-			{ pos_upper_right.x, pos_lower_left.y, pos_lower_left.z },
-			{ 1.0f, 1.0f, 1.0f, 1.0f },
-			{ tex_upper_right.x, tex_lower_left.y },
-			{ normal.x, normal.y, normal.z }
-		};
-		if (normal.z > 0.0f) {
-			std::swap(v2, v3);
+		throw "Invalid rectangle axis";
+	}
+
+	// Rotate the initial square
+	DirectX::XMMATRIX base_world;
+	switch (axis) {
+	case 0:
+		base_world = DirectX::XMMatrixRotationY(DirectX::XM_PIDIV2);
+		break;
+	case 1:
+		base_world = DirectX::XMMatrixRotationX(-DirectX::XM_PIDIV2);
+		break;
+	default:
+		base_world = DirectX::XMMatrixIdentity();
+	}
+
+	// Scale the square to the correct size
+	base_world = DirectX::XMMatrixMultiply(
+		base_world,
+		DirectX::XMMatrixScaling(
+			tile_size / 2.0f,
+			tile_size / 2.0f,
+			tile_size / 2.0f
+		)
+	);
+
+	// orient the square correctly
+	if (change_orientation) {
+		if (axis != 1) {
+			base_world = DirectX::XMMatrixMultiply(
+				base_world,
+				DirectX::XMMatrixRotationY(DirectX::XM_PI)
+			);
+		}
+		else {
+			base_world = DirectX::XMMatrixMultiply(
+				base_world,
+				DirectX::XMMatrixRotationX(DirectX::XM_PI)
+			);
 		}
 	}
 
-	vertex_t v4 = {
-		{ pos_upper_right.x, pos_upper_right.y, pos_upper_right.z },
-		{ 1.0f, 1.0f, 1.0f, 1.0f },
-		{ tex_upper_right.x, tex_upper_right.y },
-		{ normal.x, normal.y, normal.z }
-	};
+	// Get number of tiles
+	int tiles_x = round(std::abs(planar_upper_right.x - planar_lower_left.x) / tile_size);
+	int tiles_y = round(std::abs(planar_upper_right.y - planar_lower_left.y) / tile_size);
 
-	vertices.push_back(v1);
-	vertices.push_back(v2);
-	vertices.push_back(v3);
-	vertices.push_back(v3);
-	vertices.push_back(v2);
-	vertices.push_back(v4);
+	// Create the instance data
+	for (int i = 0; i < tiles_x; i++) {
+		for (int j = 0; j < tiles_y; j++) {
+			DirectX::XMMATRIX world;
+			switch (axis) {
+			case 0:
+				world = DirectX::XMMatrixMultiply(
+					base_world,
+					DirectX::XMMatrixTranslation(
+						pos_lower_left.x,
+						pos_lower_left.y + i * tile_size + tile_size / 2.0f,
+						pos_lower_left.z + j * tile_size + tile_size / 2.0f
+					)
+				);
+				break;
+			case 1:
+				world = DirectX::XMMatrixMultiply(
+					base_world,
+					DirectX::XMMatrixTranslation(
+						pos_lower_left.x + i * tile_size + tile_size / 2.0f,
+						pos_lower_left.y,
+						pos_lower_left.z + j * tile_size + tile_size / 2.0f
+					)
+				);
+				break;
+			default:
+				world = DirectX::XMMatrixMultiply(
+					base_world,
+					DirectX::XMMatrixTranslation(
+						pos_lower_left.x + i * tile_size + tile_size / 2.0f,
+						pos_lower_left.y + j * tile_size + tile_size / 2.0f,
+						pos_lower_left.z
+					)
+				);
+				break;
+			}
+
+			square_instance_t instance;
+			/*instance.tex_coord[0] = tex_lower_left.x;
+			instance.tex_coord[1] = tex_upper_right.y;*/
+			DirectX::XMStoreFloat4x4(&instance.world, world);
+			instance.color = color;
+			instances.push_back(instance);
+		}
+	}
 }
 
-std::vector<vertex_t> AxisRectangle::get_vertices() {
-	return vertices;
+std::vector<square_instance_t> AxisRectangle::get_instances() {
+	return instances;
 }

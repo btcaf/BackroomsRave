@@ -117,7 +117,7 @@ namespace {
 
     // Constant buffer for vertex shader
     ComPtr<ID3D12Resource> vs_const_buffer = nullptr;
-    constexpr UINT CONST_BUFFER_ALIGN = 256;
+    constexpr UINT CONST_BUFFER_ALIGN = 512;
     /*struct vs_const_buffer_t { // must be a multiplicity of 256 bytes
         XMFLOAT4X4 matWorldViewProj;
         XMFLOAT4 padding[(CONST_BUFFER_ALIGN
@@ -129,11 +129,11 @@ namespace {
         XMFLOAT4X4 matWorldView;
         XMFLOAT4X4 matView;
         XMFLOAT4 colMaterial;
-        XMFLOAT4 colLight;
-        XMFLOAT4 pointLight;
+        XMFLOAT4 colLight[7];
+        XMFLOAT4 pointLight[7];
         XMFLOAT4 ambientLight;
         XMFLOAT4 padding[(CONST_BUFFER_ALIGN
-            			- 3 * sizeof(XMFLOAT4X4) - 4 * sizeof(XMFLOAT4)) / sizeof(XMFLOAT4)];
+            			- 3 * sizeof(XMFLOAT4X4) - 16 * sizeof(XMFLOAT4)) / sizeof(XMFLOAT4)];
     };
     constexpr size_t VS_CONST_BUFFER_SIZE = sizeof(vs_const_buffer_t);
     vs_const_buffer_t vs_const_buffer_cpu_data;
@@ -148,9 +148,27 @@ namespace {
     Camera camera;
 
     // Geometric data
+    vertex_t rectangle_data[] = {
+        // Position (x, y, z)       Color RGBA                   Texture coordinates
+        { {-1.0f, -1.0f, 0.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 0.0f}, { 0.0f, 0.0f, -1.0f } },
+        { {-1.0f,  1.0f, 0.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 1.0f}, { 0.0f, 0.0f, -1.0f } },
+        { { 1.0f, -1.0f, 0.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 0.0f}, { 0.0f, 0.0f, -1.0f } },
+        { { 1.0f, -1.0f, 0.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 0.0f}, { 0.0f, 0.0f, -1.0f } },
+        { {-1.0f,  1.0f, 0.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 1.0f}, { 0.0f, 0.0f, -1.0f } },
+        { { 1.0f,  1.0f, 0.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 1.0f}, { 0.0f, 0.0f, -1.0f } },
+    };
+    constinit size_t const VERTEX_BUFFER_SIZE = sizeof rectangle_data;
+    constinit size_t const NUM_VERTICES = VERTEX_BUFFER_SIZE / sizeof(vertex_t);
+
+
+
     SceneConfig scene_config;
     Scene scene = Scene(scene_config);
-    auto vertices = scene.get_vertices();
+    //auto vertices = scene.get_vertices();
+    auto instances = scene.get_instances();
+
+    ComPtr<ID3D12Resource> instance_buffer = nullptr;
+    D3D12_VERTEX_BUFFER_VIEW instance_buffer_view = {};
 
 
     // Texture resource
@@ -158,6 +176,7 @@ namespace {
 
     // Color constants
     constinit FLOAT const clear_color[] = { 0.875f, 0.875f, 0.875f, 1.0f };
+    //constinit FLOAT const clear_color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
     // Helper functions
 
@@ -399,7 +418,61 @@ namespace {
 				.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
 				.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
 				.InstanceDataStepRate = 0
-			}
+			},
+            {
+                .SemanticName = "INSTANCE_TEXCOORD",
+                .SemanticIndex = 0,
+                .Format = DXGI_FORMAT_R32G32_FLOAT,
+                .InputSlot = 1,
+                .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+                .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA,
+                .InstanceDataStepRate = 1
+            },
+            {
+				.SemanticName = "INSTANCE_COLOR",
+				.SemanticIndex = 0,
+				.Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
+				.InputSlot = 1,
+				.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+				.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA,
+				.InstanceDataStepRate = 1
+			},
+            {
+                .SemanticName = "WORLD",
+                .SemanticIndex = 0,
+                .Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
+                .InputSlot = 1,
+                .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+                .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA,
+                .InstanceDataStepRate = 1
+            },
+            {
+                .SemanticName = "WORLD",
+                .SemanticIndex = 1,
+                .Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
+                .InputSlot = 1,
+                .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+                .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA,
+                .InstanceDataStepRate = 1
+            },
+            {
+                .SemanticName = "WORLD",
+                .SemanticIndex = 2,
+                .Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
+                .InputSlot = 1,
+                .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+                .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA,
+                .InstanceDataStepRate = 1
+            },
+            {
+                .SemanticName = "WORLD",
+                .SemanticIndex = 3,
+                .Format = DXGI_FORMAT_R32G32B32A32_FLOAT,
+                .InputSlot = 1,
+                .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+                .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA,
+                .InstanceDataStepRate = 1
+            }
         };
 
         // Graphic pipeline state settings
@@ -458,7 +531,7 @@ namespace {
         D3D12_RESOURCE_DESC resource_desc = {
             .Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
             .Alignment = 0,
-            .Width = vertices.size() * sizeof(vertex_t),
+            .Width = VERTEX_BUFFER_SIZE,
             .Height = 1,
             .DepthOrArraySize = 1,
             .MipLevels = 1,
@@ -477,15 +550,59 @@ namespace {
         D3D12_RANGE read_range = { 0, 0 };
         vertex_buffer->Map(
             0, &read_range, reinterpret_cast<void**>(&vertex_data));
-        memcpy(vertex_data, vertices.data(), vertices.size() * sizeof(vertex_t));
+        memcpy(vertex_data, rectangle_data, VERTEX_BUFFER_SIZE);
         vertex_buffer->Unmap(0, nullptr);
 
         // Initialize a vertex buffer view
         vertex_buffer_view.BufferLocation
             = vertex_buffer->GetGPUVirtualAddress();
-        vertex_buffer_view.SizeInBytes = vertices.size() * sizeof(vertex_t);
+        vertex_buffer_view.SizeInBytes = VERTEX_BUFFER_SIZE;
         vertex_buffer_view.StrideInBytes = sizeof(vertex_t);
     }
+
+    void BuildInstanceBuffer() {
+        D3D12_HEAP_PROPERTIES heap_prop = {
+          .Type = D3D12_HEAP_TYPE_UPLOAD,
+          .CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
+          .MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN,
+          .CreationNodeMask = 1,
+          .VisibleNodeMask = 1
+        };
+        D3D12_RESOURCE_DESC resource_desc = {
+          .Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
+          .Alignment = 0,
+          .Width = instances.size() * sizeof(square_instance_t),
+          .Height = 1,
+          .DepthOrArraySize = 1,
+          .MipLevels = 1,
+          .Format = DXGI_FORMAT_UNKNOWN,
+          .SampleDesc = {.Count = 1, .Quality = 0 },
+          .Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR,
+          .Flags = D3D12_RESOURCE_FLAG_NONE
+        };
+        d3d12_device->CreateCommittedResource(
+            &heap_prop,
+            D3D12_HEAP_FLAG_NONE,
+            &resource_desc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&instance_buffer)
+        );
+
+        UINT8* dst_data = nullptr;
+        D3D12_RANGE read_range = { 0, 0 };
+        instance_buffer->Map(
+            0, &read_range, reinterpret_cast<void**>(&dst_data)
+        );
+        memcpy(dst_data, instances.data(), instances.size() * sizeof(square_instance_t));
+        instance_buffer->Unmap(0, nullptr);
+
+        instance_buffer_view.BufferLocation =
+            instance_buffer->GetGPUVirtualAddress();
+        instance_buffer_view.SizeInBytes = instances.size() * sizeof(square_instance_t);
+        instance_buffer_view.StrideInBytes = sizeof(square_instance_t);
+    }
+
 
     /*
      * Creates a descriptor heap for constant buffer (vertex shader)
@@ -552,9 +669,11 @@ namespace {
 			&vs_const_buffer_cpu_data.matWorldView, XMMatrixIdentity());
         XMStoreFloat4x4(
             &vs_const_buffer_cpu_data.matView, XMMatrixIdentity());
+        for (int i = 0; i < 7; i++) {
+			vs_const_buffer_cpu_data.colLight[i] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			vs_const_buffer_cpu_data.pointLight[i] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		}
         vs_const_buffer_cpu_data.colMaterial = { 0.0f, 0.0f, 0.0f, 1.0f };
-        vs_const_buffer_cpu_data.colLight = { 1.0f, 1.0f, 1.0f, 1.0f };
-        vs_const_buffer_cpu_data.pointLight = { 4.0f, 2.0f, 14.0f, 0.0f };
         vs_const_buffer_cpu_data.ambientLight = { 0.15f, 0.15f, 0.f, 1.0f };
         memcpy(vs_const_buffer_data, &vs_const_buffer_cpu_data,
             sizeof vs_const_buffer_cpu_data);
@@ -799,6 +918,7 @@ namespace {
         InitPipelineState();
         InitCommandList();
         BuildVertexBuffer();
+        BuildInstanceBuffer();
         BuildDescriptorHeap();
         BuildVSConstBuffer();
         InitFence();
@@ -865,7 +985,8 @@ namespace {
 
         cmd_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         cmd_list->IASetVertexBuffers(0, 1, &vertex_buffer_view);
-        cmd_list->DrawInstanced(vertices.size(), 1, 0, 0);
+        cmd_list->IASetVertexBuffers(1, 1, &instance_buffer_view);
+        cmd_list->DrawInstanced(NUM_VERTICES, instances.size(), 0, 0);
 
         // Use the back buffer to be present.
         resource_barrier.Transition.StateBefore
@@ -993,11 +1114,21 @@ void InitTimer(HWND hwnd) {
     SetTimer(hwnd, ID_TIMER, INTERVAL, nullptr);
 }
 
+
 void OnTimer() {
     // Change animation time.
     camera.update();
+    scene.update_instances();
+    instances = scene.get_instances();
+    // modify instance buffer
+    UINT8* dst_data = nullptr;
+    D3D12_RANGE read_range = { 0, 0 };
+    instance_buffer->Map(
+		0, &read_range, reinterpret_cast<void**>(&dst_data)
+	);
+    memcpy(dst_data, instances.data(), instances.size() * sizeof(square_instance_t));
+    instance_buffer->Unmap(0, nullptr);
     
-
     // Compute transformation matrices.
     XMMATRIX wvp_matrix;
 
@@ -1016,6 +1147,13 @@ void OnTimer() {
     XMStoreFloat4x4(&vs_const_buffer_cpu_data.matWorldViewProj, wvp_matrix);
     XMStoreFloat4x4(&vs_const_buffer_cpu_data.matWorldView, XMMatrixTranspose(camera.get_view_matrix()));
     XMStoreFloat4x4(&vs_const_buffer_cpu_data.matView, XMMatrixTranspose(camera.get_view_matrix()));
+    auto colors = scene.get_lamp_colors();
+    auto positions = scene.get_lamp_positions();
+    for (int i = 0; i < 7; i++) {
+        vs_const_buffer_cpu_data.colLight[i] = colors[i];
+        vs_const_buffer_cpu_data.pointLight[i] = positions[i];
+        vs_const_buffer_cpu_data.pointLight[i].y -= 0.25;
+    }
     memcpy(vs_const_buffer_data, &vs_const_buffer_cpu_data,
         sizeof(vs_const_buffer_cpu_data));
 }

@@ -16,8 +16,8 @@ cbuffer vs_const_buffer_t
     float4x4 matWorldView;
     float4x4 matView;
     float4 colMaterial;
-    float4 colLight;
-    float4 pointLight;
+    float4 colLight[7];
+    float4 pointLight[7];
     float4 ambientLight;
     float4 padding;
 };
@@ -41,22 +41,37 @@ float4 clampColor(float4 color)
 }
 
 vs_output_t main(
-    float3 pos : POSITION, float4 col : COLOR, float2 tex : TEXCOORD, float3 normal : NORMAL
+    float3 pos : POSITION, float4 col : COLOR, float2 tex : TEXCOORD, float3 normal : NORMAL,
+    float2 tex2 : INSTANCE_TEXCOORD, float4 col2 : INSTANCE_COLOR, row_major float4x4 mat_w : WORLD, uint instance_id : SV_InstanceID
 )
 {
     vs_output_t result;
-    float4 NW = mul(float4(normal, 0.0f), matWorldView);
-    float4 dirLight = float4(pos, 0.0f) - pointLight;
-    float4 LW = mul(dirLight, matView);
+    pos = mul(float4(pos, 1.0f), mat_w).xyz;
     result.position = mul(float4(pos, 1.0f), matWorldViewProj);
-    result.color = mul(
- 			max(-dot(normalize(LW), normalize(NW)), 0.0f),
- 			colLight * col
-    ); // lub colMaterial zamiast col*/
-    //attenuate
-    float dist = length(dirLight);
-    result.color = result.color / (1.0f + 0.1 * dist * dist);
-    result.color = clampColor(ambientLight * col + result.color);
+    // if opacity nonzero we ignore lighting
+    if (col2.a > 0.0f) {
+        result.color = col2;
+        result.tex = tex;
+        return result;
+    }
+    
+    normal = mul(float4(normal, 0.0f), mat_w).xyz;
+    normal = normalize(normal);
+    result.color = ambientLight * col;
+    for (uint i = 0; i < 7; i++) {
+        float4 dirLight = float4(pos, 0.0f) - pointLight[i];
+        float4 NW = mul(float4(normal, 0.0f), matWorldView);
+        float4 LW = mul(dirLight, matView);
+        float4 new_color = mul(
+            max(-dot(normalize(LW), normalize(NW)), 0.0f),
+            colLight[i] * col
+        );
+        float dist = length(dirLight);
+        new_color = new_color / (1.0f + 0.1 * dist * dist);
+        result.color += new_color;
+    }
+
+    result.color = clampColor(result.color);
     //result.color = col;
     result.tex = tex;
     return result;

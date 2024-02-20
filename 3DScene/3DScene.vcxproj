@@ -134,6 +134,7 @@
   <ItemGroup>
     <ClInclude Include="ApplicationD3D.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="MovingLamp.h" />
     <ClInclude Include="Rectangle.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneConfig.h" />
@@ -143,6 +144,7 @@
   <ItemGroup>
     <ClCompile Include="ApplicationD3D.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="MovingLamp.cpp" />
     <ClCompile Include="Rectangle.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneConfig.cpp" />
