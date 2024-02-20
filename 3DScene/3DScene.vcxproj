@@ -134,12 +134,19 @@
   <ItemGroup>
     <ClInclude Include="ApplicationD3D.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Rectangle.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneConfig.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="WinMain.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ApplicationD3D.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Rectangle.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="SceneConfig.cpp" />
+    <ClCompile Include="types.h" />
     <ClCompile Include="util.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>

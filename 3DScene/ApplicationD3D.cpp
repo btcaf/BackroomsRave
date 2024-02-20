@@ -22,6 +22,9 @@
 #include "ApplicationD3D.h"
 #include "Camera.h"
 #include "util.h"
+#include "Scene.h"
+#include "SceneConfig.h"
+#include "types.h"
 
 #ifndef NDEBUG
 // Activates D3D12 debug layer in the InitDirect3D function
@@ -115,10 +118,22 @@ namespace {
     // Constant buffer for vertex shader
     ComPtr<ID3D12Resource> vs_const_buffer = nullptr;
     constexpr UINT CONST_BUFFER_ALIGN = 256;
-    struct vs_const_buffer_t { // must be a multiplicity of 256 bytes
+    /*struct vs_const_buffer_t { // must be a multiplicity of 256 bytes
         XMFLOAT4X4 matWorldViewProj;
         XMFLOAT4 padding[(CONST_BUFFER_ALIGN
             - sizeof(XMFLOAT4X4)) / sizeof(XMFLOAT4)];
+    };*/
+    // for lighting
+    struct vs_const_buffer_t {
+        XMFLOAT4X4 matWorldViewProj;
+        XMFLOAT4X4 matWorldView;
+        XMFLOAT4X4 matView;
+        XMFLOAT4 colMaterial;
+        XMFLOAT4 colLight;
+        XMFLOAT4 pointLight;
+        XMFLOAT4 ambientLight;
+        XMFLOAT4 padding[(CONST_BUFFER_ALIGN
+            			- 3 * sizeof(XMFLOAT4X4) - 4 * sizeof(XMFLOAT4)) / sizeof(XMFLOAT4)];
     };
     constexpr size_t VS_CONST_BUFFER_SIZE = sizeof(vs_const_buffer_t);
     vs_const_buffer_t vs_const_buffer_cpu_data;
@@ -133,38 +148,9 @@ namespace {
     Camera camera;
 
     // Geometric data
-    struct vertex_t {
-        FLOAT position[3];
-        FLOAT color[4];
-        FLOAT tex_coord[2];
-    };
-    constinit size_t const VERTEX_SIZE = sizeof(vertex_t) / sizeof(FLOAT);
-    vertex_t triangle_data[] = {
-        // Position (x, y, z)       Color RGBA                   Texture coordinates
-        // wall
-        { {-1.0f, -1.0f, 3.0f},    {0.25f, 0.25f, 0.25f, 1.0f},    {0.0f, 1.0f} },
-        { {-1.0f,  1.0f, 3.0f},    {0.25f, 0.25f, 0.25f, 1.0f},    {0.0f, 0.0f} },
-        { { 1.0f, -1.0f, 3.0f},    {0.25f, 0.25f, 0.25f, 1.0f},    {1.0f, 1.0f} },
-		{ { 1.0f, -1.0f, 3.0f},    {0.25f, 0.25f, 0.25f, 1.0f},    {1.0f, 1.0f} },
-		{ {-1.0f,  1.0f, 3.0f},    {0.25f, 0.25f, 0.25f, 1.0f},    {0.0f, 0.0f} },
-		{ { 1.0f,  1.0f, 3.0f},    {0.25f, 0.25f, 0.25f, 1.0f},    {1.0f, 0.0f} },
-        // floor
-        /*{{-1.0f, -1.0f, 5.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 1.0f}},
-		{ { 1.0f, -1.0f, 5.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 1.0f} },
-		{ {-1.0f, -1.0f, 1.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 0.0f} },
-        { {-1.0f, -1.0f, 1.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 0.0f} },
-        { { 1.0f, -1.0f, 5.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 1.0f} },
-        { { 1.0f, -1.0f, 1.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 0.0f} },*/
-        // floor but 10 times bigger
-        { {-10.0f, -1.0f,  10.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 1.0f} },
-        { { 10.0f, -1.0f,  10.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 1.0f} },
-        { {-10.0f, -1.0f, -10.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 0.0f} },
-		{ {-10.0f, -1.0f, -10.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {0.0f, 0.0f} },
-		{ { 10.0f, -1.0f,  10.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 1.0f} },
-		{ { 10.0f, -1.0f, -10.0f},    {1.0f, 1.0f, 1.0f, 1.0f},    {1.0f, 0.0f} }
-    };
-    constinit size_t const VERTEX_BUFFER_SIZE = sizeof triangle_data;
-    constinit size_t const NUM_VERTICES = VERTEX_BUFFER_SIZE / sizeof(vertex_t);
+    SceneConfig scene_config;
+    Scene scene = Scene(scene_config);
+    auto vertices = scene.get_vertices();
 
 
     // Texture resource
@@ -404,7 +390,16 @@ namespace {
                 .AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
                 .InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
                 .InstanceDataStepRate = 0
-            }
+            },
+            {
+				.SemanticName = "NORMAL",
+				.SemanticIndex = 0,
+				.Format = DXGI_FORMAT_R32G32B32_FLOAT,
+				.InputSlot = 0,
+				.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT,
+				.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+				.InstanceDataStepRate = 0
+			}
         };
 
         // Graphic pipeline state settings
@@ -463,7 +458,7 @@ namespace {
         D3D12_RESOURCE_DESC resource_desc = {
             .Dimension = D3D12_RESOURCE_DIMENSION_BUFFER,
             .Alignment = 0,
-            .Width = VERTEX_BUFFER_SIZE,
+            .Width = vertices.size() * sizeof(vertex_t),
             .Height = 1,
             .DepthOrArraySize = 1,
             .MipLevels = 1,
@@ -482,13 +477,13 @@ namespace {
         D3D12_RANGE read_range = { 0, 0 };
         vertex_buffer->Map(
             0, &read_range, reinterpret_cast<void**>(&vertex_data));
-        memcpy(vertex_data, triangle_data, VERTEX_BUFFER_SIZE);
+        memcpy(vertex_data, vertices.data(), vertices.size() * sizeof(vertex_t));
         vertex_buffer->Unmap(0, nullptr);
 
         // Initialize a vertex buffer view
         vertex_buffer_view.BufferLocation
             = vertex_buffer->GetGPUVirtualAddress();
-        vertex_buffer_view.SizeInBytes = VERTEX_BUFFER_SIZE;
+        vertex_buffer_view.SizeInBytes = vertices.size() * sizeof(vertex_t);
         vertex_buffer_view.StrideInBytes = sizeof(vertex_t);
     }
 
@@ -553,6 +548,14 @@ namespace {
             0, &read_range, reinterpret_cast<void**>(&vs_const_buffer_data));
         XMStoreFloat4x4(
             &vs_const_buffer_cpu_data.matWorldViewProj, XMMatrixIdentity());
+        XMStoreFloat4x4(
+			&vs_const_buffer_cpu_data.matWorldView, XMMatrixIdentity());
+        XMStoreFloat4x4(
+            &vs_const_buffer_cpu_data.matView, XMMatrixIdentity());
+        vs_const_buffer_cpu_data.colMaterial = { 0.0f, 0.0f, 0.0f, 1.0f };
+        vs_const_buffer_cpu_data.colLight = { 1.0f, 1.0f, 1.0f, 1.0f };
+        vs_const_buffer_cpu_data.pointLight = { 4.0f, 2.0f, 14.0f, 0.0f };
+        vs_const_buffer_cpu_data.ambientLight = { 0.15f, 0.15f, 0.f, 1.0f };
         memcpy(vs_const_buffer_data, &vs_const_buffer_cpu_data,
             sizeof vs_const_buffer_cpu_data);
     }
@@ -600,7 +603,7 @@ namespace {
         UINT const bmp_px_size = 4;
         UINT bmp_width = 0;
         UINT bmp_height = 0;
-        BYTE* bmp_bits = LoadBitmapFromFile(TEXT("assets/saul.png"), bmp_width, bmp_height);
+        BYTE* bmp_bits = LoadBitmapFromFile(TEXT("assets/backrooms.png"), bmp_width, bmp_height);
 
         // Texture resource
         D3D12_HEAP_PROPERTIES tex_heap_prop = {
@@ -862,7 +865,7 @@ namespace {
 
         cmd_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         cmd_list->IASetVertexBuffers(0, 1, &vertex_buffer_view);
-        cmd_list->DrawInstanced(NUM_VERTICES, 1, 0, 0);
+        cmd_list->DrawInstanced(vertices.size(), 1, 0, 0);
 
         // Use the back buffer to be present.
         resource_barrier.Transition.StateBefore
@@ -1011,7 +1014,8 @@ void OnTimer() {
 
     // Update the constant buffer of vertex shader.
     XMStoreFloat4x4(&vs_const_buffer_cpu_data.matWorldViewProj, wvp_matrix);
-    XMStoreFloat4x4(&vs_const_buffer_cpu_data.matWorldViewProj, wvp_matrix);
+    XMStoreFloat4x4(&vs_const_buffer_cpu_data.matWorldView, XMMatrixTranspose(camera.get_view_matrix()));
+    XMStoreFloat4x4(&vs_const_buffer_cpu_data.matView, XMMatrixTranspose(camera.get_view_matrix()));
     memcpy(vs_const_buffer_data, &vs_const_buffer_cpu_data,
         sizeof(vs_const_buffer_cpu_data));
 }

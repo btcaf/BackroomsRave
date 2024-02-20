@@ -23,7 +23,7 @@
 #include "ApplicationD3D.h"
 
 inline constinit TCHAR const APP_NAME[] = TEXT(
-    "JNP3 - Przykład - Sprzętowe instancjonowanie w Direct3D 12"
+    "JNP3 - Projekt D3D"
 );
 
 LRESULT CALLBACK WindowProc(HWND, UINT, WPARAM, LPARAM);
