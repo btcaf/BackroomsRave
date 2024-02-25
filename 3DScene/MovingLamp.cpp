@@ -64,8 +64,7 @@ void MovingLamp::update_instances() {
 	auto top_rect = AxisRectangle(
 		{ pos.x - 0.25f, pos.y + 0.25f, pos.z - 0.25f },
 		{ pos.x + 0.25f, pos.y + 0.25f, pos.z + 0.25f },
-		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
+		{ 0.5f, 0.5f },
 		true,
 		0.5f,
 		color
@@ -77,8 +76,7 @@ void MovingLamp::update_instances() {
 	auto bottom_rect = AxisRectangle(
 		{ pos.x - 0.25f, pos.y - 0.25f, pos.z - 0.25f },
 		{ pos.x + 0.25f, pos.y - 0.25f, pos.z + 0.25f },
-		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
+		{ 0.5f, 0.5f },
 		false,
 		0.5f,
 		color
@@ -90,8 +88,7 @@ void MovingLamp::update_instances() {
 	auto north_rect = AxisRectangle(
 		{ pos.x - 0.25f, pos.y - 0.25f, pos.z + 0.25f },
 		{ pos.x + 0.25f, pos.y + 0.25f, pos.z + 0.25f },
-		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
+		{ 0.5f, 0.5f },
 		true,
 		0.5f,
 		color
@@ -103,8 +100,7 @@ void MovingLamp::update_instances() {
 	auto south_rect = AxisRectangle(
 		{ pos.x - 0.25f, pos.y - 0.25f, pos.z - 0.25f },
 		{ pos.x + 0.25f, pos.y + 0.25f, pos.z - 0.25f },
-		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
+		{ 0.5f, 0.5f },
 		false,
 		0.5f,
 		color
@@ -116,8 +112,7 @@ void MovingLamp::update_instances() {
 	auto west_rect = AxisRectangle(
 		{ pos.x - 0.25f, pos.y - 0.25f, pos.z - 0.25f },
 		{ pos.x - 0.25f, pos.y + 0.25f, pos.z + 0.25f },
-		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
+		{ 0.5f, 0.5f },
 		false,
 		0.5f,
 		color
@@ -129,8 +124,7 @@ void MovingLamp::update_instances() {
 	auto east_rect = AxisRectangle(
 		{ pos.x + 0.25f, pos.y - 0.25f, pos.z - 0.25f },
 		{ pos.x + 0.25f, pos.y + 0.25f, pos.z + 0.25f },
-		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
+		{ 0.5f, 0.5f },
 		true,
 		0.5f,
 		color

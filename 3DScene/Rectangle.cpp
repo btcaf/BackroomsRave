@@ -4,7 +4,6 @@ AxisRectangle::AxisRectangle(
 	DirectX::XMFLOAT3 pos_lower_left,
 	DirectX::XMFLOAT3 pos_upper_right,
 	DirectX::XMFLOAT2 tex_lower_left,
-	DirectX::XMFLOAT2 tex_upper_right,
 	bool change_orientation,
 	FLOAT tile_size,
 	DirectX::XMFLOAT4 color
@@ -112,8 +111,8 @@ AxisRectangle::AxisRectangle(
 			}
 
 			square_instance_t instance;
-			/*instance.tex_coord[0] = tex_lower_left.x;
-			instance.tex_coord[1] = tex_upper_right.y;*/
+			instance.tex_coord[0] = tex_lower_left.x;
+			instance.tex_coord[1] = tex_lower_left.y;
 			DirectX::XMStoreFloat4x4(&instance.world, world);
 			instance.color = color;
 			instances.push_back(instance);

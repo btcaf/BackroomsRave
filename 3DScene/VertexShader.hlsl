@@ -51,7 +51,9 @@ vs_output_t main(
     // if opacity nonzero we ignore lighting
     if (col2.a > 0.0f) {
         result.color = col2;
-        result.tex = tex;
+        result.tex = tex2 + tex * 0.5f;
+        result.tex[1] = 1.0f - result.tex[1];
+        //result.tex = tex;
         return result;
     }
     
@@ -73,6 +75,8 @@ vs_output_t main(
 
     result.color = clampColor(result.color);
     //result.color = col;
-    result.tex = tex;
+    result.tex = tex2 + tex * 0.5f;
+    result.tex[1] = 1.0f - result.tex[1];
+    //result.tex = tex;
     return result;
 }

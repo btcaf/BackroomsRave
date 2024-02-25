@@ -722,7 +722,7 @@ namespace {
         UINT const bmp_px_size = 4;
         UINT bmp_width = 0;
         UINT bmp_height = 0;
-        BYTE* bmp_bits = LoadBitmapFromFile(TEXT("assets/backrooms.png"), bmp_width, bmp_height);
+        BYTE* bmp_bits = LoadBitmapFromFile(TEXT("assets/full3.png"), bmp_width, bmp_height);
 
         // Texture resource
         D3D12_HEAP_PROPERTIES tex_heap_prop = {
@@ -1116,6 +1116,10 @@ void InitTimer(HWND hwnd) {
 
 
 void OnTimer() {
+    if (GetAsyncKeyState(VK_ESCAPE) & 0x8000) {
+        PostQuitMessage(0);
+	}
+
     // Change animation time.
     camera.update();
     scene.update_instances();

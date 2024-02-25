@@ -3,22 +3,12 @@
 const float TILE_SIZE = 1.0f;
 
 SceneConfig::SceneConfig() {
-	texture_path = L"assets/backrooms.png";
-	// test
-	/*rectangles.push_back(AxisRectangle(
-		{ 2.0f, -1.0f, -5.0f },
-		{ 2.0f,  1.0f, 5.0f },
-		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
-		false,
-		TILE_SIZE
-	));*/
+	texture_path = L"assets/full_first.png";
 	// floor
 	rectangles.push_back(AxisRectangle(
 		{ -5.0f, -1.0f, -15.0f },
 		{  5.0f, -1.0f,  15.0f },
-		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
+		{ 0.5f, 0.0f },
 		true,
 		TILE_SIZE
 	));
@@ -26,8 +16,7 @@ SceneConfig::SceneConfig() {
 	rectangles.push_back(AxisRectangle(
 		{ -5.0f,  3.0f, -15.0f },
 		{  5.0f,  3.0f,  15.0f },
-		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
+		{ 0.0f, 0.5f },
 		false,
 		TILE_SIZE
 	));
@@ -36,7 +25,6 @@ SceneConfig::SceneConfig() {
 		{ -5.0f, -1.0f, 15.0f },
 		{  5.0f,  3.0f, 15.0f },
 		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
 		false,
 		TILE_SIZE
 	));
@@ -45,7 +33,6 @@ SceneConfig::SceneConfig() {
 		{ -5.0f, -1.0f, 5.0f },
 		{ -5.0f,  3.0f, 15.0f },
 		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
 		true,
 		TILE_SIZE
 	));
@@ -54,7 +41,6 @@ SceneConfig::SceneConfig() {
 		{ 5.0f, -1.0f, 5.0f },
 		{ 5.0f,  3.0f, 15.0f },
 		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
 		false,
 		TILE_SIZE
 	));
@@ -63,7 +49,6 @@ SceneConfig::SceneConfig() {
 		{ -5.0f, -1.0f, 5.0f },
 		{ -2.0f,  3.0f, 5.0f },
 		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
 		true,
 		TILE_SIZE
 	));
@@ -72,7 +57,6 @@ SceneConfig::SceneConfig() {
 		{ 2.0f, -1.0f, 5.0f },
 		{ 5.0f,  3.0f, 5.0f },
 		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
 		true,
 		TILE_SIZE
 	));
@@ -81,7 +65,6 @@ SceneConfig::SceneConfig() {
 		{ -2.0f, -1.0f, -5.0f },
 		{ -2.0f,  3.0f, 5.0f },
 		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
 		true,
 		TILE_SIZE
 	));
@@ -90,7 +73,6 @@ SceneConfig::SceneConfig() {
 		{ 2.0f, -1.0f, -5.0f },
 		{ 2.0f,  3.0f, 5.0f },
 		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
 		false,
 		TILE_SIZE
 	));
@@ -100,7 +82,6 @@ SceneConfig::SceneConfig() {
 		{ -5.0f, -1.0f, -15.0f },
 		{  5.0f,  3.0f, -15.0f },
 		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
 		true,
 		TILE_SIZE
 	));
@@ -109,7 +90,6 @@ SceneConfig::SceneConfig() {
 		{ -5.0f, -1.0f, -15.0f },
 		{ -5.0f,  3.0f, -5.0f },
 		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
 		true,
 		TILE_SIZE
 	));
@@ -118,7 +98,6 @@ SceneConfig::SceneConfig() {
 		{ 5.0f, -1.0f, -15.0f },
 		{ 5.0f,  3.0f, -5.0f },
 		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
 		false,
 		TILE_SIZE
 	));
@@ -127,7 +106,6 @@ SceneConfig::SceneConfig() {
 		{ -5.0f, -1.0f, -5.0f },
 		{ -2.0f,  3.0f, -5.0f },
 		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
 		false,
 		TILE_SIZE
 	));
@@ -136,7 +114,6 @@ SceneConfig::SceneConfig() {
 		{ 2.0f, -1.0f, -5.0f },
 		{ 5.0f,  3.0f, -5.0f },
 		{ 0.0f, 0.0f },
-		{ 1.0f, 1.0f },
 		false,
 		TILE_SIZE
 	));

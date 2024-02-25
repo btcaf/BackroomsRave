@@ -21,7 +21,6 @@
 #include <Windows.h>
 
 #include "ApplicationD3D.h"
-
 inline constinit TCHAR const APP_NAME[] = TEXT(
     "JNP3 - Projekt D3D"
 );

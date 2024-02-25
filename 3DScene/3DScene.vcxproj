@@ -175,7 +175,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="assets\saul.png" />
+    <Image Include="assets\full3.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

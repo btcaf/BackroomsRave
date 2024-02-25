@@ -74,7 +74,7 @@
     <FxCompile Include="PixelShader.hlsl" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="assets\saul.png">
+    <Image Include="assets\full3.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
