@@ -8,6 +8,10 @@
 #include "MovingLamp.h"
 #include "types.h"
 
+/*
+ * Class that holds the configuration of the scene 
+ * (geometric data, texture path, etc.)
+ */
 class SceneConfig {
 public:
 	SceneConfig();

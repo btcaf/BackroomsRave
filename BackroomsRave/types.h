@@ -4,6 +4,9 @@
 #include <Windows.h>
 #include <DirectXMath.h>
 
+/*
+ * Struct for vertex data
+ */
 struct vertex_t {
 	FLOAT position[3];
 	FLOAT color[4];
@@ -12,6 +15,9 @@ struct vertex_t {
 };
 
 
+/*
+ * Struct for instance data
+ */
 struct square_instance_t {
 	FLOAT tex_coord[2];
 	DirectX::XMFLOAT4 color;

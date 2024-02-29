@@ -3,6 +3,10 @@
 
 #include <Windows.h>
 
+/*
+ * Wrapper for PlaySound function.
+ * Plays sound on construction and stops it on destruction.
+ */
 class SoundWrapper {
 public:
 	SoundWrapper(PCWSTR path);

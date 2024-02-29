@@ -5,6 +5,9 @@
 #include "SceneConfig.h"
 #include "types.h"
 
+/*
+ * Class storing current state of the scene
+ */
 class Scene {
 	public:
 		Scene(SceneConfig config);

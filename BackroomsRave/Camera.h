@@ -5,6 +5,10 @@
 #include <windows.h>
 
 
+/*
+ * Class storing the position of the camera and responsible for
+ * updating it based on user input.
+ */
 class Camera {
 	public:
 		Camera(HWND hwnd);

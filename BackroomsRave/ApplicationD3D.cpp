@@ -482,6 +482,9 @@ namespace {
         cmd_list->Close();
     }
 
+    /*
+     * Initializes the camera and scene.
+     */
     void InitSceneElements(HWND hwnd) {
 		// Create a camera
         camera = std::make_unique<Camera>(hwnd);
@@ -533,7 +536,8 @@ namespace {
         // Initialize a vertex buffer view
         vertex_buffer_view.BufferLocation
             = vertex_buffer->GetGPUVirtualAddress();
-        vertex_buffer_view.SizeInBytes = base_square_data.size() * sizeof(vertex_t);
+        vertex_buffer_view.SizeInBytes = static_cast<UINT>(base_square_data.size()) * 
+            sizeof(vertex_t);
         vertex_buffer_view.StrideInBytes = sizeof(vertex_t);
     }
 
@@ -579,7 +583,8 @@ namespace {
 
         instance_buffer_view.BufferLocation =
             instance_buffer->GetGPUVirtualAddress();
-        instance_buffer_view.SizeInBytes = instances.size() * sizeof(square_instance_t);
+        instance_buffer_view.SizeInBytes = static_cast<UINT>(instances.size())
+            * sizeof(square_instance_t);
         instance_buffer_view.StrideInBytes = sizeof(square_instance_t);
     }
 
@@ -966,7 +971,12 @@ namespace {
         cmd_list->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         cmd_list->IASetVertexBuffers(0, 1, &vertex_buffer_view);
         cmd_list->IASetVertexBuffers(1, 1, &instance_buffer_view);
-        cmd_list->DrawInstanced(base_square_data.size(), instances.size(), 0, 0);
+        cmd_list->DrawInstanced(
+            static_cast<UINT>(base_square_data.size()),
+            static_cast<UINT>(instances.size()),
+            0, 
+            0
+        );
 
         // Use the back buffer to be present.
         resource_barrier.Transition.StateBefore

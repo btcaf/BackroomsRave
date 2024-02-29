@@ -70,12 +70,16 @@ AxisRectangle::AxisRectangle(
 	}
 
 	// Get number of tiles
-	int tiles_x = round(std::abs(planar_upper_right.x - planar_lower_left.x) / tile_size);
-	int tiles_y = round(std::abs(planar_upper_right.y - planar_lower_left.y) / tile_size);
+	size_t tiles_x = static_cast<size_t>(round(
+		std::abs(planar_upper_right.x - planar_lower_left.x) / tile_size
+	));
+	size_t tiles_y = static_cast<size_t>(round(
+		std::abs(planar_upper_right.y - planar_lower_left.y) / tile_size
+	));
 
 	// Create the instance data
-	for (int i = 0; i < tiles_x; i++) {
-		for (int j = 0; j < tiles_y; j++) {
+	for (size_t i = 0; i < tiles_x; i++) {
+		for (size_t j = 0; j < tiles_y; j++) {
 			DirectX::XMMATRIX world;
 			switch (axis) {
 			case 0:

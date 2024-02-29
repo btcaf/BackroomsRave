@@ -13,7 +13,7 @@
 #include "ApplicationD3D.h"
 #include "SoundWrapper.h"
 inline constinit TCHAR const APP_NAME[] = TEXT(
-    "JNP3 - Projekt D3D"
+    "Backrooms Rave"
 );
 
 LRESULT CALLBACK WindowProc(HWND, UINT, WPARAM, LPARAM);
@@ -105,6 +105,7 @@ int WINAPI wWinMain(
 
     ShowWindow(hwnd, cmd_show);
     UpdateWindow(hwnd);
+
     // hide cursor
     while (ShowCursor(FALSE) >= 0);
 

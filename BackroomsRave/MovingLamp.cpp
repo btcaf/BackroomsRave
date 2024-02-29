@@ -69,9 +69,7 @@ void MovingLamp::update_instances() {
 		0.5f,
 		color
 	);
-	// insert instances
-	auto top_instances = top_rect.get_instances();
-	instances.insert(instances.end(), top_instances.begin(), top_instances.end());
+
 	// bottom face
 	auto bottom_rect = AxisRectangle(
 		{ pos.x - 0.25f, pos.y - 0.25f, pos.z - 0.25f },
@@ -81,9 +79,7 @@ void MovingLamp::update_instances() {
 		0.5f,
 		color
 	);
-	// insert instances
-	auto bottom_instances = bottom_rect.get_instances();
-	instances.insert(instances.end(), bottom_instances.begin(), bottom_instances.end());
+	
 	// north face
 	auto north_rect = AxisRectangle(
 		{ pos.x - 0.25f, pos.y - 0.25f, pos.z + 0.25f },
@@ -93,9 +89,7 @@ void MovingLamp::update_instances() {
 		0.5f,
 		color
 	);
-	// insert instances
-	auto north_instances = north_rect.get_instances();
-	instances.insert(instances.end(), north_instances.begin(), north_instances.end());
+	
 	// south face
 	auto south_rect = AxisRectangle(
 		{ pos.x - 0.25f, pos.y - 0.25f, pos.z - 0.25f },
@@ -105,9 +99,7 @@ void MovingLamp::update_instances() {
 		0.5f,
 		color
 	);
-	// insert instances
-	auto south_instances = south_rect.get_instances();
-	instances.insert(instances.end(), south_instances.begin(), south_instances.end());
+	
 	// west face
 	auto west_rect = AxisRectangle(
 		{ pos.x - 0.25f, pos.y - 0.25f, pos.z - 0.25f },
@@ -117,9 +109,7 @@ void MovingLamp::update_instances() {
 		0.5f,
 		color
 	);
-	// insert instances
-	auto west_instances = west_rect.get_instances();
-	instances.insert(instances.end(), west_instances.begin(), west_instances.end());
+	
 	// east face
 	auto east_rect = AxisRectangle(
 		{ pos.x + 0.25f, pos.y - 0.25f, pos.z - 0.25f },
@@ -129,7 +119,19 @@ void MovingLamp::update_instances() {
 		0.5f,
 		color
 	);
+
 	// insert instances
+	auto top_instances = top_rect.get_instances();
+	auto bottom_instances = bottom_rect.get_instances();
+	auto north_instances = north_rect.get_instances();
+	auto south_instances = south_rect.get_instances();
 	auto east_instances = east_rect.get_instances();
+	auto west_instances = west_rect.get_instances();
+
+	instances.insert(instances.end(), top_instances.begin(), top_instances.end());
+	instances.insert(instances.end(), bottom_instances.begin(), bottom_instances.end());
+	instances.insert(instances.end(), north_instances.begin(), north_instances.end());
+	instances.insert(instances.end(), south_instances.begin(), south_instances.end());
+	instances.insert(instances.end(), west_instances.begin(), west_instances.end());
 	instances.insert(instances.end(), east_instances.begin(), east_instances.end());
 }

@@ -5,7 +5,8 @@ Scene::Scene(SceneConfig config) {
 	auto rectangles = config.get_rectangles();
 	for (AxisRectangle rectangle : rectangles) {
 		auto square_instances = rectangle.get_instances();
-		const_instances.insert(const_instances.end(), square_instances.begin(), square_instances.end());
+		const_instances.insert(const_instances.end(), square_instances.begin(),
+			square_instances.end());
 	}
 	update_instances();
 }
@@ -15,7 +16,8 @@ void Scene::update_instances() {
 	for (auto lamp : lamps) {
 		lamp->update();
 		auto lamp_instances = lamp->get_instances();
-		instances.insert(instances.end(), lamp_instances.begin(), lamp_instances.end());
+		instances.insert(instances.end(), lamp_instances.begin(),
+			lamp_instances.end());
 	}
 }
 

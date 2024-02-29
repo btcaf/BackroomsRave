@@ -55,16 +55,15 @@ void Camera::update() {
 		)
 	);
 
-	// get mouse input
+	// each frame we look for the change in cursor position
+	// and reset it to the center of the window
 	POINT cursor_pos;
 	GetCursorPos(&cursor_pos);
-
-	// set cursor to the center of the window
 	SetCursorPos(center_x, center_y);
-	// calculate the change in mouse position
-	float dx = cursor_pos.x - center_x;
-	float dy = cursor_pos.y - center_y;
-	// update the pitch and yaw
+
+	float dx = static_cast<float>(cursor_pos.x - center_x);
+	float dy = static_cast<float>(cursor_pos.y - center_y);
+	// clamp to prevent the camera from flipping
 	pitch = std::clamp(pitch + dy * rotation_speed, -1.5f, 1.5f);
 	yaw = fmodf(yaw + dx * rotation_speed, DirectX::XM_2PI);
 }
