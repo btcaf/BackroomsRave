@@ -1,6 +1,7 @@
 ## Backrooms Rave
 
 Tekstury podłogi, sufitu i lamp - własne
+
 Niestety gdzieś zgubiłem plik .xcf całości, w repozytorium znajdują się tylko pliki .xcf dla poszczególnych składowych.
 
 
