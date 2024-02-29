@@ -10,13 +10,13 @@ void hr_check(HRESULT hr) {
 }
 
 BYTE* load_bitmap(PCWSTR uri, UINT& width, UINT& height) {
-    IWICImagingFactory* wic_factory = NULL;
-    IWICBitmapDecoder* wic_decoder = NULL;
-    IWICBitmapFrameDecode* wic_frame = NULL;
-    IWICFormatConverter* wic_converter = NULL;
+    IWICImagingFactory* wic_factory = nullptr;
+    IWICBitmapDecoder* wic_decoder = nullptr;
+    IWICBitmapFrameDecode* wic_frame = nullptr;
+    IWICFormatConverter* wic_converter = nullptr;
 
     hr_check(CoCreateInstance(
-        CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER,
+        CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
         IID_PPV_ARGS(&wic_factory)
     ));
 
