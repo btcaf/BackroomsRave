@@ -30,7 +30,7 @@ AxisRectangle::AxisRectangle(
 		throw "Invalid rectangle axis";
 	}
 
-	// Rotate the initial square
+	// rotate the initial square to align with the right axes
 	DirectX::XMMATRIX base_world;
 	switch (axis) {
 	case 0:
@@ -43,7 +43,7 @@ AxisRectangle::AxisRectangle(
 		base_world = DirectX::XMMatrixIdentity();
 	}
 
-	// Scale the square to the correct size
+	// scale the square to the correct size
 	base_world = DirectX::XMMatrixMultiply(
 		base_world,
 		DirectX::XMMatrixScaling(
@@ -69,7 +69,7 @@ AxisRectangle::AxisRectangle(
 		}
 	}
 
-	// Get number of tiles
+	// get number of tiles
 	size_t tiles_x = static_cast<size_t>(round(
 		std::abs(planar_upper_right.x - planar_lower_left.x) / tile_size
 	));
@@ -77,7 +77,7 @@ AxisRectangle::AxisRectangle(
 		std::abs(planar_upper_right.y - planar_lower_left.y) / tile_size
 	));
 
-	// Create the instance data
+	// create the instance data
 	for (size_t i = 0; i < tiles_x; i++) {
 		for (size_t j = 0; j < tiles_y; j++) {
 			DirectX::XMMATRIX world;

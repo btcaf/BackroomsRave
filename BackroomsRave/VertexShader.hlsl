@@ -26,7 +26,7 @@ vs_output_t main(
     vs_output_t result;
     pos = mul(float4(pos, 1.0f), mat_w).xyz;
     result.position = mul(float4(pos, 1.0f), matViewProj);
-    // if opacity nonzero we ignore lighting
+    // if opacity nonzero we ignore lighting (used for lamps)
     if (inst_col.a > 0.0f) {
         result.color = inst_col;
         result.tex = inst_tex + tex * 0.5f;
