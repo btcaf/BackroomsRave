@@ -1,11 +1,13 @@
 ## Backrooms Rave
 
-Tekstury podłogi, sufitu i lamp - własne
 
-Niestety gdzieś zgubiłem plik .xcf całości, w repozytorium znajdują się tylko pliki .xcf dla poszczególnych składowych.
-
-
-Żródło tekstury ścian - https://pin.it/7Fes3frvT
+A Direct3D project for JNP3 course at MIMUW. Parts of the code were borrowed from the lecturer's examples.
 
 
-Żródło muzyki - https://youtu.be/zvq9r6R6QAY
+Use WASD for moving, mouse for looking around and Esc to exit app.
+
+
+Wall texture - https://pin.it/7Fes3frvT
+
+
+Music - https://youtu.be/zvq9r6R6QAY
